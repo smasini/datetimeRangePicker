@@ -85,7 +85,7 @@ angular.module('rgkevin.datetimeRangePicker', ['vr.directives.slider'])
                             '<div class="rg-range-picker-slider" id="rgRangePickerSliderContainer" ng-show="data.hasTimeSliders">' +
                                 '<div class="rg-range-picker-slider-labels">' +
                                     '<div class="row">' +
-                                        '<div class="rg-range-picker-divider xs-hidden"><span class="label">to</span></div>' +
+                                        '<div class="rg-range-picker-divider xs-hidden"><span class="label">{{timepickerTitles.to}}</span></div>' +
                                         '<div class="col-xs-6 text-center"><span class="label label-range-picker">{{data.time.from | rgTime:data.time.hours24}}</span></div>' +
                                         '<div class="col-xs-6 text-center"><span class="label label-range-picker">{{data.time.to | rgTime:data.time.hours24}}</span></div>' +
                                     '</div>' +
@@ -106,6 +106,9 @@ angular.module('rgkevin.datetimeRangePicker', ['vr.directives.slider'])
                     date: {
                         from: 'START_DATE',
                         to: 'END_DATE'
+                    },
+                    time: {
+                        to: 'TO'
                     }
                 },
                 timeDefaults = {
@@ -127,7 +130,8 @@ angular.module('rgkevin.datetimeRangePicker', ['vr.directives.slider'])
 
             scope.data.hasDatePickers = angular.isObject(scope.data.date);
             scope.data.hasTimeSliders = angular.isObject(scope.data.time);
-            scope.datepickerTitles = angular.extend(defaultLabels.date, scope.labels && scope.labels.date ); // set labels for date pickers
+            scope.datepickerTitles = angular.extend(defaultLabels.date, scope.labels && scope.labels.date); // set labels for date pickers
+            scope.timepickerTitles = angular.extend(defaultLabels.time, scope.labels && scope.labels.time); // set labels for time pickers
 
             if (scope.data.hasDatePickers) {
                 scope.data.date = angular.extend(dateDefaults, scope.data.date);
