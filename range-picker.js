@@ -29,32 +29,34 @@ angular.module('rgkevin.datetimeRangePicker', ['vr.directives.slider'])
          * @param {input} number of minutes
          * @param {type} true = 00:00:00 | false = 00:00 am or pm
          */
-        return function (input, type) {
+        return function (input, timeParam) {
+            if (timeParam == null)
+                return;
             var
-                hours = parseInt( input / 60, 10 ),
+                hours = parseInt(input / 60, 10),
                 minutes = (input - (hours * 60)) < 10 ? '0' + (input - (hours * 60)) : input - (hours * 60),
-                meridian = type ? ':00' : ( hours >= 12 && hours !== 24 ? ' pm' : ' am' );
+                meridian = timeParam.type ? ':00' : (hours >= 12 && hours !== 24 ? ' pm' : ' am');
 
-            return (!type && hours > 12 ? (hours === 24 ? '00' : (hours - 12 < 10 ? '0': '' ) + (hours - 12) ) : (hours < 10 ? '0' : '') + hours) + ':' + minutes + meridian;
+            return (!timeParam.type && hours > 12 ? (hours === 24 ? '00' : (hours - 12 < 10 ? '0' : '') + (hours - 12)) : (hours < 10 ? '0' : '') + hours) + ':' + minutes + (timeParam.includeMeridian ? meridian : "");
         };
     }])
-    .directive('rgRangePicker', [ '$compile', '$timeout', '$filter', function ($compile, $timeout, $filter) {
+    .directive('rgRangePicker', ['$compile', '$timeout', '$filter', function ($compile, $timeout, $filter) {
 
-	return {
-		restrict: 'A',
+        return {
+            restrict: 'A',
 		scope: {
             data: '=rgRangePicker',
-            labels: '=',
-            onTimeChange: '&',
-            maxRangeDate: '=', // in days
-            vertical : '='
-		},
+                labels: '=',
+                onTimeChange: '&',
+                maxRangeDate: '=', // in days
+                vertical: '='
+            },
 
-		// replace: true,
-		template: function(/*element, attrs*/) {
-			/*var defaultsAttrs ={
-                data: {
-                    date: {
+            // replace: true,
+            template: function (/*element, attrs*/) {
+                /*var defaultsAttrs ={
+                    data: {
+                        date: {
                         from: new Date(),
                         to: new Date()
                     },
@@ -86,8 +88,8 @@ angular.module('rgkevin.datetimeRangePicker', ['vr.directives.slider'])
                                 '<div class="rg-range-picker-slider-labels">' +
                                     '<div class="row">' +
                                         '<div class="rg-range-picker-divider xs-hidden"><span class="label">{{timepickerTitles.to}}</span></div>' +
-                                        '<div class="col-xs-6 text-center"><span class="label label-range-picker">{{data.time.from | rgTime:data.time.hours24}}</span></div>' +
-                                        '<div class="col-xs-6 text-center"><span class="label label-range-picker">{{data.time.to | rgTime:data.time.hours24}}</span></div>' +
+                                        '<div class="col-xs-6 text-center"><span class="label label-range-picker">{{data.time.from | rgTime:data.time.timeParam}}</span></div>' +
+                                        '<div class="col-xs-6 text-center"><span class="label label-range-picker">{{data.time.to | rgTime:data.time.timeParam}}</span></div>' +
                                     '</div>' +
                                 '</div>' +
                             '</div>' +
@@ -102,9 +104,9 @@ angular.module('rgkevin.datetimeRangePicker', ['vr.directives.slider'])
 			}
             // define labels
             var
-                sliderMinWidth      = 400,// if directive is less width than 500, then display responsive version
-                sliderContainer     = angular.element('#rgRangePickerSliderContainer', element[0]),
-                slider              = angular.element( '<div slider class="clean-slider" ng-model="data.time.from" ng-model-range="data.time.to" floor="{{data.time.dFrom}}" ceiling="{{data.time.dTo}}" buffer="{{data.time.minRange || 1}}" step="{{data.time.step || 1}}" step-width="{{data.time.step || 1}}" precision="0" stretch="3"></div>' ),
+                    sliderMinWidth = 400,// if directive is less width than 500, then display responsive version
+                    sliderContainer = angular.element('#rgRangePickerSliderContainer', element[0]),
+                    slider = angular.element('<div slider class="clean-slider" ng-model="data.time.from" ng-model-range="data.time.to" floor="{{data.time.dFrom}}" ceiling="{{data.time.dTo}}" buffer="{{data.time.minRange || 1}}" step="{{data.time.step || 1}}" step-width="{{data.time.step || 1}}" precision="0" stretch="3"></div>'),
                 sliderAlreadyRender = false,
                 defaultLabels = {
                     date: {
@@ -119,13 +121,14 @@ angular.module('rgkevin.datetimeRangePicker', ['vr.directives.slider'])
                     from: 480, // default low value
                     to: 1020, // default high value
                     dFrom: 0, // lowest integer
-                    dTo: 1440, // highest integer
-                    step: 15, // step width
-                    minRange: 15, // min range
-                    hours24: true // true for 00:00:00 format and false for 00:00 am or pm
-                },
-                dateDefaults = {
-                    from: new Date(),
+                        dTo: 1440, // highest integer
+                        step: 15, // step width
+                        minRange: 15, // min range
+                        hours24: true, // true for 00:00:00 format and false for 00:00 am or pm,
+                        includeMeridian: true
+                    },
+                    dateDefaults = {
+                        from: new Date(),
                     to: new Date(),
                     min: null,
                     max: null
@@ -140,62 +143,66 @@ angular.module('rgkevin.datetimeRangePicker', ['vr.directives.slider'])
             if (scope.data.hasDatePickers) {
                 scope.data.date = angular.extend(dateDefaults, scope.data.date);
             }
-            if (scope.data.hasTimeSliders) {
-                scope.data.time = angular.extend(timeDefaults, scope.data.time);
-            }
+                if (scope.data.hasTimeSliders) {
+                    scope.data.time = angular.extend(timeDefaults, scope.data.time);
+                }
+                scope.data.timeParam = {
+                    type: scope.data.time.hours24,
+                    includeMeridian: scope.data.time.includeMeridian
+                };
+				
+                function renderSlider() {
+                    if (!sliderAlreadyRender && scope.data.hasTimeSliders) {
+                        sliderContainer.append(slider);
+                        $compile(slider)(scope);
+                        sliderAlreadyRender = true;
 
-            function renderSlider () {
-                if(!sliderAlreadyRender && scope.data.hasTimeSliders) {
-                    sliderContainer.append( slider );
-                    $compile( slider )( scope );
-                    sliderAlreadyRender = true;
-
-                    /**
-                     * Responsive fix
-                     */
-                    if ( element.width() <= sliderMinWidth ) {
-                        angular.element( '.rg-range-picker', element[0]).addClass('rg-range-picker-responsive');
+                        /**
+                         * Responsive fix
+                         */
+                        if (element.width() <= sliderMinWidth) {
+                            angular.element('.rg-range-picker', element[0]).addClass('rg-range-picker-responsive');
+                        }
                     }
                 }
-            }
 
-            if ( attrs.collapse ) {
-                scope.$watch( function() {
-                    return element[0].className;
-                }, function() {
-                    if(element.hasClass('in')) {
-                        // render slider
-                        renderSlider();
-                    }
+                if (attrs.collapse) {
+                    scope.$watch(function () {
+                        return element[0].className;
+                    }, function () {
+                        if (element.hasClass('in')) {
+                            // render slider
+                            renderSlider();
+                        }
                 });
             } else {
                 renderSlider();
             }
 
-            /**
-             * Trigger event when user change slide range
-             */
-            function timeChanges (newValue, oldValue) {
-                if ( !angular.isUndefined(timeChangePromise) ) {
-                    $timeout.cancel(timeChangePromise);
+                /**
+                 * Trigger event when user change slide range
+                 */
+                function timeChanges(newValue, oldValue) {
+                    if (!angular.isUndefined(timeChangePromise)) {
+                        $timeout.cancel(timeChangePromise);
 
+                    }
+                    if (newValue !== oldValue) {
+                        timeChangePromise = $timeout(function () {
+
+                            scope.onTimeChange()({
+                                from: $filter('rgTime')(scope.data.time.from, scope.data.timeParam),
+                                to: $filter('rgTime')(scope.data.time.to, scope.data.timeParam),
+                                range: $filter('rgTime')(scope.data.time.to - scope.data.time.from, scope.data.timeParam)
+                            });
+
+                        }, 500);
+                    }
                 }
-                if ( newValue !== oldValue ) {
-                    timeChangePromise = $timeout( function(){
-
-                        scope.onTimeChange()({
-                            from: $filter('rgTime')(scope.data.time.from, true),
-                            to: $filter('rgTime')(scope.data.time.to, true),
-                            range: $filter('rgTime')( scope.data.time.to - scope.data.time.from , true)
-                        });
-
-                    }, 500);
+                if (!angular.isUndefined(scope.onTimeChange()) && scope.data.hasTimeSliders) {
+                    scope.$watch('data.time.from', timeChanges);
+                    scope.$watch('data.time.to', timeChanges);
                 }
-            }
-            if ( !angular.isUndefined(scope.onTimeChange()) && scope.data.hasTimeSliders ) {
-                scope.$watch('data.time.from', timeChanges);
-                scope.$watch('data.time.to', timeChanges);
-            }
             /**
              * Max Range Date functionality
              */
@@ -214,16 +221,16 @@ angular.module('rgkevin.datetimeRangePicker', ['vr.directives.slider'])
                 // set min date
                 scope.data.date.min = new Date(_min);
                 // set max date
-                scope.data.date.max = new Date(_max);
-            }
+                    scope.data.date.max = new Date(_max);
+                }
 
-            if ( scope.maxRangeDate && scope.data.hasDatePickers ) {
-                scope.$watch('data.date.from', updateMinAndMaxDate);
-                scope.$watch('data.date.to', updateMinAndMaxDate);
-            }
-		},
+                if (scope.maxRangeDate && scope.data.hasDatePickers) {
+                    scope.$watch('data.date.from', updateMinAndMaxDate);
+                    scope.$watch('data.date.to', updateMinAndMaxDate);
+                }
+            },
 
-		controller: ["$scope", "$element", "$attrs", function($scope, $element, $attrs) {
-		}]
-	};
-}]);
+            controller: ["$scope", "$element", "$attrs", function ($scope, $element, $attrs) {
+            }]
+        };
+    }]);
