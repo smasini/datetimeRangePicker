@@ -44,8 +44,8 @@ angular.module('rgkevin.datetimeRangePicker', ['vr.directives.slider'])
 
         return {
             restrict: 'A',
-		scope: {
-            data: '=rgRangePicker',
+            scope: {
+                data: '=rgRangePicker',
                 labels: '=',
                 onTimeChange: '&',
                 maxRangeDate: '=', // in days
@@ -57,20 +57,20 @@ angular.module('rgkevin.datetimeRangePicker', ['vr.directives.slider'])
                 /*var defaultsAttrs ={
                     data: {
                         date: {
-                        from: new Date(),
-                        to: new Date()
-                    },
-                    time: {
-                        from: 0,
-                        to: 1440 // minutes in a day
+                            from: new Date(),
+                            to: new Date()
+                        },
+                        time: {
+                            from: 0,
+                            to: 1440 // minutes in a day
+                        }
                     }
-                }
-			};
-			for(var xx in defaultsAttrs) {
-				if(attrs[xx] ===undefined) {
-					attrs[xx] =defaultsAttrs[xx];
-				}
-			}*/
+                };
+                for(var xx in defaultsAttrs) {
+                    if(attrs[xx] ===undefined) {
+                        attrs[xx] =defaultsAttrs[xx];
+                    }
+                }*/
 
 			return '<div class="rg-range-picker" ng-class="{\'rg-range-picker-vertical\':vertical}">' +
                         '<div class="rg-range-picker-box well" ng-class="{ \'only-calendars\': !data.hasTimeSliders, \'only-slider\': !data.hasDatePickers }">' +
@@ -97,30 +97,30 @@ angular.module('rgkevin.datetimeRangePicker', ['vr.directives.slider'])
                     '</div>';
 		},
 
-		link: function(scope, element, attrs) {
-			if(scope == null){
-				//TODO questo è un test. Probabilmente bisogna mettere un timeout o gestirlo in qualche modo
-				return;
-			}
-            // define labels
-            var
+            link: function (scope, element, attrs) {
+                if (scope == null || scope.data == null) {
+                    //TODO questo è un test. Probabilmente bisogna mettere un timeout o gestirlo in qualche modo
+                    return;
+                }
+                // define labels
+                var
                     sliderMinWidth = 400,// if directive is less width than 500, then display responsive version
                     sliderContainer = angular.element('#rgRangePickerSliderContainer', element[0]),
                     slider = angular.element('<div slider class="clean-slider" ng-model="data.time.from" ng-model-range="data.time.to" floor="{{data.time.dFrom}}" ceiling="{{data.time.dTo}}" buffer="{{data.time.minRange || 1}}" step="{{data.time.step || 1}}" step-width="{{data.time.step || 1}}" precision="0" stretch="3"></div>'),
-                sliderAlreadyRender = false,
-                defaultLabels = {
-                    date: {
-                        from: 'START_DATE',
-                        to: 'END_DATE'
+                    sliderAlreadyRender = false,
+                    defaultLabels = {
+                        date: {
+                            from: 'START_DATE',
+                            to: 'END_DATE'
+                        },
+                        time: {
+                            to: 'TO'
+                        }
                     },
-                    time: {
-                        to: 'TO'
-                    }
-                },
-                timeDefaults = {
-                    from: 480, // default low value
-                    to: 1020, // default high value
-                    dFrom: 0, // lowest integer
+                    timeDefaults = {
+                        from: 480, // default low value
+                        to: 1020, // default high value
+                        dFrom: 0, // lowest integer
                         dTo: 1440, // highest integer
                         step: 15, // step width
                         minRange: 15, // min range
@@ -129,20 +129,20 @@ angular.module('rgkevin.datetimeRangePicker', ['vr.directives.slider'])
                     },
                     dateDefaults = {
                         from: new Date(),
-                    to: new Date(),
-                    min: null,
-                    max: null
-                },
-                timeChangePromise;
+                        to: new Date(),
+                        min: null,
+                        max: null
+                    },
+                    timeChangePromise;
 
-            scope.data.hasDatePickers = angular.isObject(scope.data.date);
-            scope.data.hasTimeSliders = angular.isObject(scope.data.time);
-            scope.datepickerTitles = angular.extend(defaultLabels.date, scope.labels && scope.labels.date); // set labels for date pickers
-            scope.timepickerTitles = angular.extend(defaultLabels.time, scope.labels && scope.labels.time); // set labels for time pickers
+                scope.data.hasDatePickers = angular.isObject(scope.data.date);
+                scope.data.hasTimeSliders = angular.isObject(scope.data.time);
+                scope.datepickerTitles = angular.extend(defaultLabels.date, scope.labels && scope.labels.date); // set labels for date pickers
+                scope.timepickerTitles = angular.extend(defaultLabels.time, scope.labels && scope.labels.time); // set labels for time pickers
 
-            if (scope.data.hasDatePickers) {
-                scope.data.date = angular.extend(dateDefaults, scope.data.date);
-            }
+                if (scope.data.hasDatePickers) {
+                    scope.data.date = angular.extend(dateDefaults, scope.data.date);
+                }
                 if (scope.data.hasTimeSliders) {
                     scope.data.time = angular.extend(timeDefaults, scope.data.time);
                 }
@@ -174,10 +174,10 @@ angular.module('rgkevin.datetimeRangePicker', ['vr.directives.slider'])
                             // render slider
                             renderSlider();
                         }
-                });
-            } else {
-                renderSlider();
-            }
+                    });
+                } else {
+                    renderSlider();
+                }
 
                 /**
                  * Trigger event when user change slide range
@@ -203,24 +203,24 @@ angular.module('rgkevin.datetimeRangePicker', ['vr.directives.slider'])
                     scope.$watch('data.time.from', timeChanges);
                     scope.$watch('data.time.to', timeChanges);
                 }
-            /**
-             * Max Range Date functionality
-             */
-            var
-                maxRange = ((scope.maxRangeDate && scope.maxRangeDate - 1) || 0) * 86400000, // 86400000 miliseconds a day
-                superMaxDate = scope.data.date && scope.data.date.max && scope.data.date.max.getTime(), // miliseconds
-                superMinDate = scope.data.date && scope.data.date.min && scope.data.date.min.getTime(); // miliseconds
-
-            function updateMinAndMaxDate() {
+                /**
+                 * Max Range Date functionality
+                 */
                 var
-                    currentRange = scope.data.date.to.getTime() - scope.data.date.from.getTime(),
-                    offset = maxRange - currentRange,
-                    _min = (scope.data.date.from.getTime() - offset) < superMinDate ? superMinDate : scope.data.date.from.getTime() - offset, // miliseconds
-                    _max = (scope.data.date.to.getTime() + offset) > superMaxDate ? superMaxDate : (scope.data.date.to.getTime() + offset); // miliseconds
+                    maxRange = ((scope.maxRangeDate && scope.maxRangeDate - 1) || 0) * 86400000, // 86400000 miliseconds a day
+                    superMaxDate = scope.data.date && scope.data.date.max && scope.data.date.max.getTime(), // miliseconds
+                    superMinDate = scope.data.date && scope.data.date.min && scope.data.date.min.getTime(); // miliseconds
 
-                // set min date
-                scope.data.date.min = new Date(_min);
-                // set max date
+                function updateMinAndMaxDate() {
+                    var
+                        currentRange = scope.data.date.to.getTime() - scope.data.date.from.getTime(),
+                        offset = maxRange - currentRange,
+                        _min = (scope.data.date.from.getTime() - offset) < superMinDate ? superMinDate : scope.data.date.from.getTime() - offset, // miliseconds
+                        _max = (scope.data.date.to.getTime() + offset) > superMaxDate ? superMaxDate : (scope.data.date.to.getTime() + offset); // miliseconds
+
+                    // set min date
+                    scope.data.date.min = new Date(_min);
+                    // set max date
                     scope.data.date.max = new Date(_max);
                 }
 
