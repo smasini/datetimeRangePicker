@@ -1,5 +1,5 @@
 {
-  "name": "datetime-range-picker",
+  "name": "datetime-range-picker-fork",
   "version": "1.3.2",
   "main":"range-picker.js",
   "description": "A datetime picker for range between two calendars and time sliders ",
