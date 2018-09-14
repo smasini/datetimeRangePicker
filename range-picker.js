@@ -96,6 +96,10 @@ angular.module('rgkevin.datetimeRangePicker', ['vr.directives.slider'])
 		},
 
 		link: function(scope, element, attrs) {
+			if(scope == null){
+				//TODO questo è un test. Probabilmente bisogna mettere un timeout o gestirlo in qualche modo
+				return;
+			}
             // define labels
             var
                 sliderMinWidth      = 400,// if directive is less width than 500, then display responsive version
